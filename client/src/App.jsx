@@ -145,9 +145,9 @@ import Simulator from './components/Simulator';
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold tracking-tight">Rollout</h1>
+                  <h1 className="text-xl font-extrabold tracking-tight text-white">Rollout</h1>
                 </div>
-                <p className="text-xs text-base-content/60 hidden sm:block">Feature Flag Management</p>
+                <p className="text-xs text-slate-400 font-medium hidden sm:block">Feature Flag Management</p>
               </div>
             </div>
     
@@ -182,27 +182,27 @@ import Simulator from './components/Simulator';
             {/* Stats Section */}
             <div className="grid grid-cols-3 gap-3 md:gap-6">
               <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
-                <div className="stat-figure text-primary">
-                  <Flag className="w-6 h-6" />
+                <div className="stat-figure text-purple-400">
+                  <Flag className="w-6 h-6 text-purple-400" />
                 </div>
-                <div className="stat-title text-xs font-medium">Total Flags</div>
-                <div className="stat-value text-2xl md:text-3xl text-primary">{flags.length}</div>
+                <div className="stat-title text-xs font-semibold text-slate-400">Total Flags</div>
+                <div className="stat-value text-2xl md:text-3xl font-extrabold text-purple-400">{flags.length}</div>
               </div>
-    
+
               <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
-                <div className="stat-figure text-success">
-                  <CheckCircle className="w-6 h-6" />
+                <div className="stat-figure text-emerald-400">
+                  <CheckCircle className="w-6 h-6 text-emerald-400" />
                 </div>
-                <div className="stat-title text-xs font-medium">Active (LIVE)</div>
-                <div className="stat-value text-2xl md:text-3xl text-success">{activeCount}</div>
+                <div className="stat-title text-xs font-semibold text-slate-400">Active (LIVE)</div>
+                <div className="stat-value text-2xl md:text-3xl font-extrabold text-emerald-400">{activeCount}</div>
               </div>
-    
+
               <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
-                <div className="stat-figure text-base-content/40">
-                  <Sparkles className="w-6 h-6" />
+                <div className="stat-figure text-slate-400">
+                  <Sparkles className="w-6 h-6 text-slate-400" />
                 </div>
-                <div className="stat-title text-xs font-medium">Disabled (OFF)</div>
-                <div className="stat-value text-2xl md:text-3xl opacity-60">{inactiveCount}</div>
+                <div className="stat-title text-xs font-semibold text-slate-400">Disabled (OFF)</div>
+                <div className="stat-value text-2xl md:text-3xl font-extrabold text-slate-200">{inactiveCount}</div>
               </div>
             </div>
     

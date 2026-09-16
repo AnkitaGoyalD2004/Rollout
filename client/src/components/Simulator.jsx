@@ -33,14 +33,14 @@ import { evaluateFlag } from '../api';
           <div className="card-body p-5">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-5 h-5 text-secondary" />
-              <h2 className="card-title text-base font-bold">Flag Evaluation Playground</h2>
+              <h2 className="card-title text-base font-bold text-white">Flag Evaluation Playground</h2>
             </div>
-            <p className="text-xs text-base-content/70 mb-4">
+            <p className="text-xs text-slate-400 mb-4">
               Test in real-time how your backend evaluates a flag for a given user ID.
             </p>
-    
+
             {flags.length === 0 ? (
-              <div className="text-center py-6 text-sm opacity-60">
+              <div className="text-center py-6 text-sm text-slate-400">
                 Create a flag above to start testing!
               </div>
             ) : (
@@ -48,10 +48,10 @@ import { evaluateFlag } from '../api';
                 {/* Select Flag */}
                 <div className="form-control">
                   <label className="label py-1">
-                    <span className="label-text text-xs font-semibold">Select Feature Flag</span>
+                    <span className="label-text text-xs font-semibold text-slate-300">Select Feature Flag</span>
                   </label>
                   <select
-                    className="select select-bordered select-sm w-full text-xs font-mono"
+                    className="select select-bordered select-sm w-full text-xs font-mono bg-base-200 text-white border-base-300"
                     value={activeKey}
                     onChange={(e) => {
                       setSelectedFlagKey(e.target.value);
@@ -65,15 +65,15 @@ import { evaluateFlag } from '../api';
                     ))}
                   </select>
                 </div>
-    
+
                 {/* Enter User ID */}
                 <div className="form-control">
                   <label className="label py-1">
-                    <span className="label-text text-xs font-semibold">User Identifier</span>
+                    <span className="label-text text-xs font-semibold text-slate-300">User Identifier</span>
                   </label>
                   <input
                     type="text"
-                    className="input input-bordered input-sm w-full text-xs font-mono"
+                    className="input input-bordered input-sm w-full text-xs font-mono bg-base-200 text-white border-base-300"
                     placeholder="e.g. user_123 or email"
                     value={userId}
                     onChange={(e) => setUserId(e.target.value)}
@@ -111,36 +111,58 @@ import { evaluateFlag } from '../api';
               <div
                 className={`mt-4 p-4 rounded-xl border transition-all ${
                   result.enabled
-                    ? 'bg-success/10 border-success/30 text-success-content'
-                    : 'bg-base-200 border-base-300'
+                    ? 'bg-emerald-950/60 border-emerald-500/50 shadow-lg shadow-emerald-950/40'
+                    : 'bg-rose-950/60 border-rose-500/50 shadow-lg shadow-rose-950/40'
                 }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  {result.enabled ? (
-                    <CheckCircle2 className="w-6 h-6 text-success" />
-                  ) : (
-                    <XCircle className="w-6 h-6 text-error" />
-                  )}
+                <div className="flex items-center gap-3 mb-2">
+                  <div
+                    className={`p-2 rounded-lg ${
+                      result.enabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                    }`}
+                  >
+                    {result.enabled ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <XCircle className="w-5 h-5" />
+                    )}
+                  </div>
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider block">
+                    <span
+                      className={`text-xs font-bold uppercase tracking-wider block ${
+                        result.enabled ? 'text-emerald-400' : 'text-rose-400'
+                      }`}
+                    >
                       {result.enabled ? 'Feature Enabled' : 'Feature Disabled'}
                     </span>
-                    <span className="text-sm font-semibold">
-                      {result.enabled ? 'User sees the new feature ' : 'User sees standard experience'}
+                    <span className="text-sm font-bold text-white block">
+                      {result.enabled
+                        ? 'User sees the new feature'
+                        : 'User sees standard experience'}
                     </span>
                   </div>
                 </div>
-    
-                <div className="divider my-1.5 opacity-40"></div>
-    
-                <div className="text-xs font-mono space-y-1 opacity-85">
-                  <div className="flex justify-between">
-                    <span className="opacity-70">Evaluation Reason:</span>
-                    <span className="badge badge-sm badge-neutral">{result.reason}</span>
+
+                <div className="divider my-2 opacity-20"></div>
+
+                <div className="text-xs font-mono space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300 font-medium">Evaluation Reason:</span>
+                    <span
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold font-mono border ${
+                        result.enabled
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                          : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                      }`}
+                    >
+                      {result.reason}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="opacity-70">Evaluated Flag:</span>
-                    <span className="font-semibold">{result.flagKey}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300 font-medium">Evaluated Flag:</span>
+                    <span className="font-bold text-purple-300 bg-purple-500/20 px-2.5 py-1 rounded-md border border-purple-500/30">
+                      {result.flagKey}
+                    </span>
                   </div>
                 </div>
               </div>
