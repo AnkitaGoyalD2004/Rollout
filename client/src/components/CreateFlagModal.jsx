@@ -1,15 +1,16 @@
-import { Sparkles, X } from 'lucide-react';
+import { Building2, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
     
-    export default function CreateFlagModal({ isOpen, onClose, onCreated }) {
-      const [name, setName] = useState('');
-      const [key, setKey] = useState('');
-      const [description, setDescription] = useState('');
-      const [isEnabled, setIsEnabled] = useState(false);
-      const [rolloutPercentage, setRolloutPercentage] = useState(100);
-      const [targetUsersInput, setTargetUsersInput] = useState('');
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState('');
+export default function CreateFlagModal({ isOpen, onClose, onCreated, companyName }) {
+  const [name, setName] = useState('');
+  const [key, setKey] = useState('');
+  const [description, setDescription] = useState('');
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [rolloutPercentage, setRolloutPercentage] = useState(100);
+  const [targetUsersInput, setTargetUsersInput] = useState('');
+  const [environment, setEnvironment] = useState('development');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
     
       if (!isOpen) return null;
     
@@ -43,6 +44,7 @@ import { useState } from 'react';
             isEnabled,
             rolloutPercentage: Number(rolloutPercentage),
             targetUsers,
+            environment,
           });
     
           // Reset form
@@ -52,6 +54,7 @@ import { useState } from 'react';
           setIsEnabled(false);
           setRolloutPercentage(100);
           setTargetUsersInput('');
+          setEnvironment('development');
           onClose();
         } catch (err) {
           setError(err.message);
@@ -80,6 +83,18 @@ import { useState } from 'react';
             )}
     
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Workspace Indicator */}
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-base-200 border border-base-300">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs text-slate-400">Workspace:</span>
+                  <span className="text-xs font-bold text-white">{companyName}</span>
+                </div>
+                <span className="badge badge-sm border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-semibold text-[10px]">
+                  Company Locked
+                </span>
+              </div>
+
               {/* Flag Name */}
               <div className="form-control">
                 <label className="label">
@@ -160,22 +175,7 @@ import { useState } from 'react';
                   <span>100% (All Users)</span>
                 </div>
               </div>
-    
-              {/* Target Users / Whitelist */}
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-medium">Whitelisted Users (Optional)</span>
-                  <span className="label-text-alt opacity-60">Comma-separated</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="alice@example.com, bob@example.com"
-                  className="input input-bordered w-full text-sm"
-                  value={targetUsersInput}
-                  onChange={(e) => setTargetUsersInput(e.target.value)}
-                />
-              </div>
-    
+
               {/* Action Buttons */}
               <div className="modal-action mt-6">
                 <button type="button" onClick={onClose} className="btn btn-ghost" disabled={loading}>

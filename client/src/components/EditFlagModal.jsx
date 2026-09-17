@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Sliders, Users, Percent } from 'lucide-react';
+import { Percent, Sliders, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function EditFlagModal({ isOpen, flag, onClose, onUpdated }) {
   const [name, setName] = useState('');
@@ -52,7 +52,7 @@ export default function EditFlagModal({ isOpen, flag, onClose, onUpdated }) {
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-lg bg-base-100 border border-base-300 shadow-2xl">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <h3 className="font-bold text-lg flex items-center gap-2">
             <Sliders className="w-5 h-5 text-primary" />
             Edit Feature Flag
@@ -60,6 +60,12 @@ export default function EditFlagModal({ isOpen, flag, onClose, onUpdated }) {
           <button onClick={onClose} className="btn btn-sm btn-circle btn-ghost">
             <X className="w-4 h-4" />
           </button>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <span className="badge badge-sm border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-semibold">
+            🏢 {flag.company}
+          </span>
         </div>
 
         {error && (
@@ -134,29 +140,6 @@ export default function EditFlagModal({ isOpen, flag, onClose, onUpdated }) {
               <button type="button" onClick={() => setRolloutPercentage(75)} className="hover:underline">75%</button>
               <button type="button" onClick={() => setRolloutPercentage(100)} className="hover:underline">100%</button>
             </div>
-          </div>
-
-          {/* Whitelisted Users */}
-          <div className="form-control">
-            <label className="label py-1">
-              <span className="label-text text-xs font-semibold flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-secondary" />
-                Whitelisted Users (VIP Allowlist)
-              </span>
-              <span className="label-text-alt opacity-50 text-[11px]">Comma-separated</span>
-            </label>
-            <input
-              type="text"
-              placeholder="alice@company.com, guest_user_1, tester@qa.io"
-              className="input input-bordered input-sm w-full text-xs font-mono"
-              value={targetUsersInput}
-              onChange={(e) => setTargetUsersInput(e.target.value)}
-            />
-            <label className="label py-0.5">
-              <span className="label-text-alt text-[11px] opacity-60">
-                These users will ALWAYS see the feature, even if rollout is 0%!
-              </span>
-            </label>
           </div>
 
           {/* Action Buttons */}

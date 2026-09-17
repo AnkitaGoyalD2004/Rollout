@@ -1,4 +1,4 @@
- import { Check, Copy, Percent, Trash2, Users, Sliders } from 'lucide-react';
+ import { Check, Copy, Percent, Sliders, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
     
@@ -75,35 +75,20 @@ import toast from 'react-hot-toast';
             {/* Divider */}
             <div className="divider my-2 opacity-20"></div>
 
-            {/* Details: Rollout % and Whitelisted Users */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {/* Rollout % */}
-              <div className="bg-base-200/80 p-2.5 rounded-lg border border-base-300 flex flex-col gap-1">
-                <div className="flex items-center justify-between text-slate-400">
-                  <span className="flex items-center gap-1 font-medium">
-                    <Percent className="w-3.5 h-3.5 text-primary" /> Rollout
-                  </span>
-                  <span className="font-bold text-white">{flag.rolloutPercentage}%</span>
-                </div>
-                {/* Progress bar */}
-                <progress
-                  className="progress progress-primary w-full h-1.5"
-                  value={flag.rolloutPercentage}
-                  max="100"
-                ></progress>
-              </div>
-
-              {/* Target Whitelist */}
-              <div className="bg-base-200/80 p-2.5 rounded-lg border border-base-300 flex flex-col justify-between">
-                <span className="flex items-center gap-1 text-slate-400 font-medium">
-                  <Users className="w-3.5 h-3.5 text-secondary" /> Whitelist
+            {/* Rollout Percentage (Full Width) */}
+            <div className="bg-base-200/80 p-2.5 rounded-lg border border-base-300 flex flex-col gap-1.5 text-xs w-full">
+              <div className="flex items-center justify-between text-slate-400">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Percent className="w-3.5 h-3.5 text-primary" /> Rollout
                 </span>
-                <span className="font-semibold text-white mt-1">
-                  {flag.targetUsers?.length > 0
-                    ? `${flag.targetUsers.length} user${flag.targetUsers.length > 1 ? 's' : ''}`
-                    : 'None (Public)'}
-                </span>
+                <span className="font-bold text-white text-sm">{flag.rolloutPercentage}%</span>
               </div>
+              {/* Progress bar */}
+              <progress
+                className="progress progress-primary w-full h-2"
+                value={flag.rolloutPercentage}
+                max="100"
+              ></progress>
             </div>
 
             {/* Card Footer: Edit on Left, Delete on Right */}

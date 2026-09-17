@@ -1,24 +1,28 @@
-  import cors from 'cors';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
+import authRoutes from './routes/authRoutes.js';
+import benchmarkRoutes from './routes/benchmarkRoutes.js';
 import flagRoutes from './routes/flagRoutes.js';
-    
-    dotenv.config();
 
-    const app = express();
-    const PORT = process.env.PORT || 5001;
+dotenv.config();
 
-    app.use(cors());
-    app.use(express.json());
+const app = express();
+const PORT = process.env.PORT || 5001;
 
-    // Request logger to see requests in terminal
-    app.use((req, res, next) => {
-      console.log(`📡 [${req.method}] ${req.url}`);
-      next();
-    });
+app.use(cors());
+app.use(express.json());
 
-    app.use('/api/flags', flagRoutes);
+// Request logger to see requests in terminal
+app.use((req, res, next) => {
+  console.log(`📡 [${req.method}] ${req.url}`);
+  next();
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/flags', flagRoutes);
+app.use('/api/benchmark', benchmarkRoutes);
 
     app.get('/health', (req, res) => {
       res.json({ status: 'ok', message: 'Rollout Backend is running!' });

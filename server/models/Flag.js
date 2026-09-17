@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
     const flagSchema = new mongoose.Schema(
       {
+        company: {
+          type: String,
+          required: [true, 'Company name is required'],
+          trim: true,
+        },
         key: {
           type: String,
           required: [true, 'Flag key is required'],
-          unique: true,
           trim: true,
           lowercase: true,
           // Ensures flag keys are clean: e.g. "new-checkout", "dark-mode"
@@ -37,14 +41,24 @@ import mongoose from 'mongoose';
         },
         environment: {
           type: String,
-          enum: ['development', 'staging', 'production'],
-          default: 'production',
+          default: 'development',
+        },
+        evaluationCount: {
+          type: Number,
+          default: 0,
+        },
+        enabledCount: {
+          type: Number,
+          default: 0,
         },
       },
       {
         timestamps: true, // Automatically adds createdAt and updatedAt
       }
     );
+
+    // Multi-tenant uniqueness: Company A and Company B can have the same flag key independently!
+    flagSchema.index({ company: 1, key: 1 }, { unique: true });
 
     const Flag = mongoose.model('Flag', flagSchema);
 

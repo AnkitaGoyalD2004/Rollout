@@ -1,37 +1,88 @@
-import { CheckCircle, Flag, Plus, RefreshCw, Search, ShieldAlert, Sparkles } from 'lucide-react';
+import { BarChart3, Building2, CheckCircle, Flag, Gauge, History, LogOut, Plus, RefreshCw, Search, ShieldAlert, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { createFlag, deleteFlag, getFlags, toggleFlag, updateFlag } from './api';
+import AnalyticsModal from './components/AnalyticsModal';
+import AuditLogModal from './components/AuditLogModal';
+import AuthPage from './components/AuthPage';
+import ConcurrencyModal from './components/ConcurrencyModal';
 import CreateFlagModal from './components/CreateFlagModal';
 import EditFlagModal from './components/EditFlagModal';
 import FlagCard from './components/FlagCard';
+import Logo from './components/Logo';
+import MetricsDashboard from './components/MetricsDashboard';
 import Simulator from './components/Simulator';
-    
-    export default function App() {
-      const [flags, setFlags] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [search, setSearch] = useState('');
-      const [isModalOpen, setIsModalOpen] = useState(false);
-      const [editingFlag, setEditingFlag] = useState(null);
-      const [error, setError] = useState('');
-    
-      // Fetch flags on page load
-      const loadFlags = async () => {
-        try {
-          setLoading(true);
-          setError('');
-          const data = await getFlags();
-          setFlags(data);
-        } catch (err) {
-          setError(err.message || 'Failed to connect to backend server');
-        } finally {
-          setLoading(false);
-        }
-      };
-    
-      useEffect(() => {
-        loadFlags();
-      }, []);
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('rollout_user');
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [flags, setFlags] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isConcurrencyOpen, setIsConcurrencyOpen] = useState(false);
+  const [editingFlag, setEditingFlag] = useState(null);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState(() =>
+    typeof window !== 'undefined' && window.location.pathname === '/metrics' ? 'metrics' : 'flags'
+  );
+
+  const navigateTo = (tab) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.history.pushState({}, '', tab === 'metrics' ? '/metrics' : '/');
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveTab(window.location.pathname === '/metrics' ? 'metrics' : 'flags');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem('rollout_token');
+    localStorage.removeItem('rollout_user');
+    setCurrentUser(null);
+    setFlags([]);
+    toast.success('Signed out successfully');
+  };
+
+  // Fetch flags for the authenticated user's company workspace
+  const loadFlags = async () => {
+    if (!currentUser) return;
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getFlags();
+      setFlags(data);
+    } catch (err) {
+      if (err.message?.includes('401') || err.message?.includes('Authentication')) {
+        handleLogout();
+      } else {
+        setError(err.message || 'Failed to connect to backend server');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      loadFlags();
+    }
+  }, [currentUser]);
     
       // Toggle flag with smooth toast
       const handleToggle = async (id) => {
@@ -40,7 +91,7 @@ import Simulator from './components/Simulator';
           setFlags((prev) => prev.map((f) => (f._id === id ? updated : f)));
           toast.success(
             <span>
-              <b>{updated.name}</b> is now {updated.isEnabled ? '🟢 LIVE' : '⚪ OFF'}
+              <b>{updated.name}</b> is now {updated.isEnabled ? 'LIVE' : 'OFF'}
             </span>,
             { id: `toggle-${id}` }
           );
@@ -53,7 +104,7 @@ import Simulator from './components/Simulator';
       const handleCreate = async (newFlagData) => {
         const created = await createFlag(newFlagData);
         setFlags((prev) => [created, ...prev]);
-        toast.success(`Flag "${created.name}" created successfully! 🎉`);
+        toast.success(`Flag "${created.name}" created! 🎉`);
       };
 
       // Update flag (Rollout %, Whitelist, Name, Description)
@@ -121,95 +172,188 @@ import Simulator from './components/Simulator';
       const activeCount = flags.filter((f) => f.isEnabled).length;
       const inactiveCount = flags.length - activeCount;
     
-      return (
-        <div className="min-h-screen bg-base-200 text-base-content flex flex-col">
-          {/* React Hot Toast Container */}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: '#1f2937',
-                color: '#f9fafb',
-                border: '1px solid #374151',
-              },
-            }}
-          />
+  // If user is not authenticated, show AuthPage (Login / Register)
+  if (!currentUser) {
+    return (
+      <>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1f2937',
+              color: '#f9fafb',
+              border: '1px solid #374151',
+            },
+          }}
+        />
+        <AuthPage
+          onAuthSuccess={(user) => {
+            setCurrentUser(user);
+            toast.success(`Welcome to ${user.company} workspace!`);
+          }}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-base-200 text-base-content flex flex-col">
+      {/* React Hot Toast Container */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#1f2937',
+            color: '#f9fafb',
+            border: '1px solid #374151',
+          },
+        }}
+      />
+
+      {/* Top Navbar */}
+      <header className="navbar bg-base-100 border-b border-base-300 px-4 md:px-8 sticky top-0 z-30 shadow-sm">
+        <div className="flex-1 flex items-center gap-3">
+          <Logo />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-extrabold tracking-tight text-white">Rollout</h1>
+            </div>
+            <p className="text-xs text-slate-400 font-medium hidden sm:block">Feature Flag Management</p>
+          </div>
+
+          {/* Company Workspace Badge (Strictly Locked - No switching!) */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 ml-2 sm:ml-4">
+            <Building2 className="w-4 h-4 text-emerald-400" />
+            <span className="font-bold text-xs text-white tracking-wide">{currentUser.company}</span>
+            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold ml-1 hidden sm:inline">
+              Workspace
+            </span>
+          </div>
+
+          {/* Navigation View Switcher (Flags vs Metrics Dashboard) */}
+          <div className="flex items-center bg-base-200/90 p-1 rounded-xl border border-base-300 ml-3 hidden md:flex">
+            <button
+              onClick={() => navigateTo('flags')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'flags' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Flag className="w-3.5 h-3.5" />
+              <span>Feature Flags</span>
+            </button>
+            <button
+              onClick={() => navigateTo('metrics')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'metrics' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Metrics & Charts</span>
+              <span className="badge badge-success badge-xs font-mono font-bold text-[9px]">150+ Users</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-none flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => navigateTo(activeTab === 'metrics' ? 'flags' : 'metrics')}
+            className={`btn btn-sm ${
+              activeTab === 'metrics'
+                ? 'btn-primary shadow-md'
+                : 'btn-outline border-purple-500/40 text-purple-300 hover:bg-purple-600/20 hover:text-white'
+            } gap-1.5`}
+            title="Open Visual Performance & Metrics Dashboard"
+          >
+            <BarChart3 className="w-4 h-4 text-amber-400" />
+            <span className="hidden sm:inline font-bold">
+              {activeTab === 'metrics' ? 'View Flags' : 'Charts & Metrics'}
+            </span>
+          </button>
+          <button
+            onClick={() => setIsAuditLogOpen(true)}
+            className="btn btn-ghost btn-sm gap-1.5 text-slate-300 hover:text-white"
+            title="View Activity & Audit Logs"
+          >
+            <History className="w-4 h-4 text-purple-400" />
+            <span className="hidden sm:inline font-medium">Activity Log</span>
+          </button>
+          <button onClick={() => { loadFlags(); toast.success('Flags refreshed!'); }} className="btn btn-ghost btn-sm btn-circle" title="Refresh Flags">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-sm gap-2">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Flag</span>
+          </button>
+
+          {/* User Profile & Logout */}
+          <div className="flex items-center gap-2.5 pl-3 border-l border-base-300">
+            <span className="text-xs font-bold text-white hidden md:inline">{currentUser.name}</span>
+            <button
+              onClick={handleLogout}
+              className="btn btn-ghost btn-sm text-slate-400 hover:text-rose-400 gap-1"
+              title="Sign out of workspace"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span className="hidden sm:inline text-xs font-semibold">Logout</span>
+            </button>
+          </div>
+        </div>
+      </header>
     
-          {/* Top Navbar */}
-          <header className="navbar bg-base-100 border-b border-base-300 px-4 md:px-8 sticky top-0 z-30
-  shadow-sm">
-            <div className="flex-1 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-
-  content font-black text-xl shadow-md">
-                R
-              </div>
+      {/* Main Content Area: Flags View or Metrics Dashboard */}
+      {activeTab === 'metrics' ? (
+        <MetricsDashboard
+          onBack={() => navigateTo('flags')}
+          flags={flags}
+          company={currentUser.company}
+        />
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
+          {/* Error Banner if Backend is down */}
+          {error && (
+            <div className="alert alert-error shadow-lg">
+              <ShieldAlert className="w-5 h-5" />
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-extrabold tracking-tight text-white">Rollout</h1>
-                </div>
-                <p className="text-xs text-slate-400 font-medium hidden sm:block">Feature Flag Management</p>
+                <h3 className="font-bold">Backend Connection Failed</h3>
+                <div className="text-xs">{error}</div>
               </div>
-            </div>
-    
-            <div className="flex-none flex items-center gap-3">
-              <button onClick={() => { loadFlags(); toast.success('Flags refreshed!'); }} className="btn 
-  btn-ghost btn-sm btn-circle" title="Refresh Flags">
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              </button>
-              <button onClick={() => setIsModalOpen(true)} className="btn btn-primary btn-sm gap-2">
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">New Flag</span>
+              <button onClick={loadFlags} className="btn btn-sm">
+                Retry
               </button>
             </div>
-          </header>
-    
-          {/* Main Content Area */}
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
-            {/* Error Banner if Backend is down */}
-            {error && (
-              <div className="alert alert-error shadow-lg">
-                <ShieldAlert className="w-5 h-5" />
-                <div>
-                  <h3 className="font-bold">Backend Connection Failed</h3>
-                  <div className="text-xs">{error}</div>
-                </div>
-                <button onClick={loadFlags} className="btn btn-sm">
-                  Retry
-                </button>
-              </div>
-            )}
-    
-            {/* Stats Section */}
-            <div className="grid grid-cols-3 gap-3 md:gap-6">
-              <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
-                <div className="stat-figure text-purple-400">
-                  <Flag className="w-6 h-6 text-purple-400" />
-                </div>
-                <div className="stat-title text-xs font-semibold text-slate-400">Total Flags</div>
-                <div className="stat-value text-2xl md:text-3xl font-extrabold text-purple-400">{flags.length}</div>
-              </div>
+          )}
 
-              <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
-                <div className="stat-figure text-emerald-400">
-                  <CheckCircle className="w-6 h-6 text-emerald-400" />
-                </div>
-                <div className="stat-title text-xs font-semibold text-slate-400">Active (LIVE)</div>
-                <div className="stat-value text-2xl md:text-3xl font-extrabold text-emerald-400">{activeCount}</div>
+          {/* Stats Section */}
+          <div className="grid grid-cols-3 gap-3 md:gap-6">
+            <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
+              <div className="stat-figure text-purple-400">
+                <Flag className="w-6 h-6 text-purple-400" />
               </div>
-
-              <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
-                <div className="stat-figure text-slate-400">
-                  <Sparkles className="w-6 h-6 text-slate-400" />
-                </div>
-                <div className="stat-title text-xs font-semibold text-slate-400">Disabled (OFF)</div>
-                <div className="stat-value text-2xl md:text-3xl font-extrabold text-slate-200">{inactiveCount}</div>
-              </div>
+              <div className="stat-title text-xs font-semibold text-slate-400">Total Flags</div>
+              <div className="stat-value text-2xl md:text-3xl font-extrabold text-purple-400">{flags.length}</div>
             </div>
+
+            <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
+              <div className="stat-figure text-emerald-400">
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div className="stat-title text-xs font-semibold text-slate-400">Active (LIVE)</div>
+              <div className="stat-value text-2xl md:text-3xl font-extrabold text-emerald-400">{activeCount}</div>
+            </div>
+
+            <div className="stat bg-base-100 rounded-2xl border border-base-300 shadow-sm p-4">
+              <div className="stat-figure text-slate-400">
+                <Sparkles className="w-6 h-6 text-slate-400" />
+              </div>
+              <div className="stat-title text-xs font-semibold text-slate-400">Disabled (OFF)</div>
+              <div className="stat-value text-2xl md:text-3xl font-extrabold text-slate-200">{inactiveCount}</div>
+            </div>
+          </div>
     
             {/* Grid Layout: Left is Flags list (2 cols), Right is Simulator */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-4">
-                {/* Search and Filters Bar */}
+                {/* Search and Action Bar */}
                 <div className="flex items-center gap-3">
                   <div className="relative flex-1">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-50" />
@@ -221,12 +365,15 @@ import Simulator from './components/Simulator';
                       onChange={(e) => setSearch(e.target.value)}
                     />
                   </div>
+                  <span className="text-xs font-mono text-slate-400 shrink-0 hidden sm:inline">
+                    {filteredFlags.length} flag{filteredFlags.length !== 1 ? 's' : ''}
+                  </span>
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="btn btn-primary btn-sm gap-1.5 shadow-sm shrink-0"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>+ New Flag</span>
+                    <span> New Flag</span>
                   </button>
                 </div>
     
@@ -279,15 +426,17 @@ import Simulator from './components/Simulator';
               {/* Right Column: Live Playground Simulator */}
               <div className="lg:col-span-1">
                 <div className="sticky top-20">
-                  <Simulator flags={flags} />
+                  <Simulator flags={flags} company={currentUser.company} />
                 </div>
               </div>
             </div>
-          </main>
+        </main>
+      )}
 
           {/* Create Modal Dialog */}
           <CreateFlagModal
             isOpen={isModalOpen}
+            companyName={currentUser.company}
             onClose={() => setIsModalOpen(false)}
             onCreated={handleCreate}
           />
@@ -298,6 +447,28 @@ import Simulator from './components/Simulator';
             flag={editingFlag}
             onClose={() => setEditingFlag(null)}
             onUpdated={handleUpdate}
+          />
+
+          {/* Audit Log / Activity Modal */}
+          <AuditLogModal
+            isOpen={isAuditLogOpen}
+            company={currentUser.company}
+            onClose={() => setIsAuditLogOpen(false)}
+          />
+
+          {/* Traffic & Evaluation Analytics Modal */}
+          <AnalyticsModal
+            isOpen={isAnalyticsOpen}
+            flags={flags}
+            company={currentUser.company}
+            onClose={() => setIsAnalyticsOpen(false)}
+            onRefresh={() => loadFlags(selectedEnv)}
+          />
+
+          {/* Platform Concurrency & Stress Benchmark Modal */}
+          <ConcurrencyModal
+            isOpen={isConcurrencyOpen}
+            onClose={() => setIsConcurrencyOpen(false)}
           />
         </div>
       );

@@ -2,31 +2,37 @@ import { CheckCircle2, Play, Sparkles, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { evaluateFlag } from '../api';
     
-    export default function Simulator({ flags }) {
-      const [selectedFlagKey, setSelectedFlagKey] = useState('');
-      const [userId, setUserId] = useState('alice@company.com');
-      const [result, setResult] = useState(null);
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState('');
-    
-      // Default to first flag if available and none selected
-      const activeKey = selectedFlagKey || (flags.length > 0 ? flags[0].key : '');
-    
-      const handleSimulate = async (e) => {
-        e.preventDefault();
-        if (!activeKey) return;
-    
-        setError('');
-        setLoading(true);
-        try {
-          const res = await evaluateFlag(activeKey, userId);
-          setResult(res);
-        } catch (err) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
+export default function Simulator({ flags, company }) {
+  const [selectedFlagKey, setSelectedFlagKey] = useState('');
+  const [userId, setUserId] = useState('alice@company.com');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Default to first flag if available and none selected
+  const activeKey = selectedFlagKey || (flags.length > 0 ? flags[0].key : '');
+
+  const handleSimulate = async (e) => {
+    e.preventDefault();
+    if (!activeKey) return;
+
+    setError('');
+    setLoading(true);
+    try {
+      const activeFlag = flags.find((f) => f.key === activeKey);
+      const res = await evaluateFlag(
+        activeKey,
+        userId,
+        activeFlag?.environment || 'production',
+        company || activeFlag?.company || ''
+      );
+      setResult(res);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
     
       return (
         <div className="card bg-base-100 border border-base-300 shadow-md">
@@ -164,6 +170,14 @@ import { evaluateFlag } from '../api';
                       {result.flagKey}
                     </span>
                   </div>
+                  {result.company && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300 font-medium">Workspace:</span>
+                      <span className="font-bold text-[11px] font-mono text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/40">
+                        {result.company}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
