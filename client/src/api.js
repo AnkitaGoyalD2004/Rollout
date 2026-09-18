@@ -134,22 +134,4 @@ export async function evaluateFlag(key, userId, env = 'production', company = ''
   return res.json();
 }
 
-// 3. BENCHMARK & CONCURRENCY CAPACITY APIS
-export async function getBenchmarkResults() {
-  const res = await fetch(`${API_BASE}/benchmark/latest`);
-  if (!res.ok) throw new Error('Failed to fetch benchmark results');
-  return res.json();
-}
-
-export async function runBenchmarkLive() {
-  const res = await fetch(`${API_BASE}/benchmark/run`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Benchmark run failed');
-  }
-  return res.json();
-}
 

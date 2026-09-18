@@ -1,16 +1,14 @@
-import { BarChart3, Building2, CheckCircle, Flag, Gauge, History, LogOut, Plus, RefreshCw, Search, ShieldAlert, Sparkles } from 'lucide-react';
+import { Building2, CheckCircle, Flag, Gauge, History, LogOut, Plus, RefreshCw, Search, ShieldAlert, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { createFlag, deleteFlag, getFlags, toggleFlag, updateFlag } from './api';
 import AnalyticsModal from './components/AnalyticsModal';
 import AuditLogModal from './components/AuditLogModal';
 import AuthPage from './components/AuthPage';
-import ConcurrencyModal from './components/ConcurrencyModal';
 import CreateFlagModal from './components/CreateFlagModal';
 import EditFlagModal from './components/EditFlagModal';
 import FlagCard from './components/FlagCard';
 import Logo from './components/Logo';
-import MetricsDashboard from './components/MetricsDashboard';
 import Simulator from './components/Simulator';
 
 export default function App() {
@@ -28,27 +26,8 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAuditLogOpen, setIsAuditLogOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-  const [isConcurrencyOpen, setIsConcurrencyOpen] = useState(false);
   const [editingFlag, setEditingFlag] = useState(null);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState(() =>
-    typeof window !== 'undefined' && window.location.pathname === '/metrics' ? 'metrics' : 'flags'
-  );
-
-  const navigateTo = (tab) => {
-    setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      window.history.pushState({}, '', tab === 'metrics' ? '/metrics' : '/');
-    }
-  };
-
-  useEffect(() => {
-    const handlePopState = () => {
-      setActiveTab(window.location.pathname === '/metrics' ? 'metrics' : 'flags');
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
 
   // Logout handler
   const handleLogout = () => {
@@ -230,45 +209,9 @@ export default function App() {
             </span>
           </div>
 
-          {/* Navigation View Switcher (Flags vs Metrics Dashboard) */}
-          <div className="flex items-center bg-base-200/90 p-1 rounded-xl border border-base-300 ml-3 hidden md:flex">
-            <button
-              onClick={() => navigateTo('flags')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'flags' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Flag className="w-3.5 h-3.5" />
-              <span>Feature Flags</span>
-            </button>
-            <button
-              onClick={() => navigateTo('metrics')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'metrics' ? 'bg-primary text-white shadow-sm' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
-              <span>Metrics & Charts</span>
-              <span className="badge badge-success badge-xs font-mono font-bold text-[9px]">150+ Users</span>
-            </button>
-          </div>
         </div>
 
         <div className="flex-none flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={() => navigateTo(activeTab === 'metrics' ? 'flags' : 'metrics')}
-            className={`btn btn-sm ${
-              activeTab === 'metrics'
-                ? 'btn-primary shadow-md'
-                : 'btn-outline border-purple-500/40 text-purple-300 hover:bg-purple-600/20 hover:text-white'
-            } gap-1.5`}
-            title="Open Visual Performance & Metrics Dashboard"
-          >
-            <BarChart3 className="w-4 h-4 text-amber-400" />
-            <span className="hidden sm:inline font-bold">
-              {activeTab === 'metrics' ? 'View Flags' : 'Charts & Metrics'}
-            </span>
-          </button>
           <button
             onClick={() => setIsAuditLogOpen(true)}
             className="btn btn-ghost btn-sm gap-1.5 text-slate-300 hover:text-white"
@@ -299,16 +242,9 @@ export default function App() {
           </div>
         </div>
       </header>
-    
-      {/* Main Content Area: Flags View or Metrics Dashboard */}
-      {activeTab === 'metrics' ? (
-        <MetricsDashboard
-          onBack={() => navigateTo('flags')}
-          flags={flags}
-          company={currentUser.company}
-        />
-      ) : (
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
+
+      {/* Main Content Area: Flags View */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6">
           {/* Error Banner if Backend is down */}
           {error && (
             <div className="alert alert-error shadow-lg">
@@ -431,7 +367,6 @@ export default function App() {
               </div>
             </div>
         </main>
-      )}
 
           {/* Create Modal Dialog */}
           <CreateFlagModal
@@ -463,12 +398,6 @@ export default function App() {
             company={currentUser.company}
             onClose={() => setIsAnalyticsOpen(false)}
             onRefresh={() => loadFlags(selectedEnv)}
-          />
-
-          {/* Platform Concurrency & Stress Benchmark Modal */}
-          <ConcurrencyModal
-            isOpen={isConcurrencyOpen}
-            onClose={() => setIsConcurrencyOpen(false)}
           />
         </div>
       );

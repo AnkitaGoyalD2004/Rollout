@@ -13,7 +13,7 @@
         daisyui,
       ],
       daisyui: {
-        themes: ["dark", "light", "corporate"],
+        themes: ["dark", "forest", "business", "light", "corporate"],
         darkTheme: "dark",
       },
     };

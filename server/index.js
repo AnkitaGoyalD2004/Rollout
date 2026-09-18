@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
-import benchmarkRoutes from './routes/benchmarkRoutes.js';
 import flagRoutes from './routes/flagRoutes.js';
 
 dotenv.config();
@@ -22,7 +21,6 @@ app.use((req, res, next) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/flags', flagRoutes);
-app.use('/api/benchmark', benchmarkRoutes);
 
     app.get('/health', (req, res) => {
       res.json({ status: 'ok', message: 'Rollout Backend is running!' });

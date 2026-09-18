@@ -90,9 +90,6 @@ export default function CreateFlagModal({ isOpen, onClose, onCreated, companyNam
                   <span className="text-xs text-slate-400">Workspace:</span>
                   <span className="text-xs font-bold text-white">{companyName}</span>
                 </div>
-                <span className="badge badge-sm border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-semibold text-[10px]">
-                  Company Locked
-                </span>
               </div>
 
               {/* Flag Name */}
