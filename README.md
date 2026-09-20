@@ -9,15 +9,15 @@
 
 ## ✨ Key Features
 
-- ⚡ **Sub-Millisecond Evaluation:** Built-in **Redis Cache-Aside** layer ($< 1\text{ms}$ latency) ensuring feature flag checks never slow down client or backend apps.
-- 🏢 **Multi-Tenant Workspaces:** Strict company/tenant scoping. Different teams and organizations operate independently within their own secure workspaces.
-- 🎯 **Advanced Traffic Targeting:**
+-  **Sub-Millisecond Evaluation:** Built-in **Redis Cache-Aside** layer ensuring feature flag checks never slow down client or backend apps.
+- **Multi-Tenant Workspaces:** Strict company/tenant scoping. Different teams and organizations operate independently within their own secure workspaces.
+- **Advanced Traffic Targeting:**
   - **Deterministic Percentage Rollouts:** Stable MD5 hashing ensures a user consistently sees the same feature version across sessions.
-  - **User Whitelisting:** Target specific beta testers by user ID or email.
-- 🛡️ **Graceful Fallback & High Availability:** Automatically falls back to MongoDB Atlas if Redis is ever unreachable—zero downtime or crashes.
-- 📜 **Full Audit Logging:** Tracks every flag creation, toggle switch, percentage update, and deletion with user identity and timestamp.
-- 🎮 **Live Interactive Simulator:** Test and verify evaluation rules in real-time directly inside the dashboard.
-- 🌙 **Modern Dark UI:** Sleek, responsive dashboard built with React, Tailwind CSS, and Lucide icons.
+  - **User Whitelisting:** Target specific testers by user ID or email.
+-  **Graceful Fallback & High Availability:** Automatically falls back to MongoDB Atlas if Redis is ever unreachable—zero downtime or crashes.
+-  **Full Audit Logging:** Tracks every flag creation, toggle switch, percentage update, and deletion with user identity and timestamp.
+-  **Live Interactive Simulator:** Test and verify evaluation rules in real-time directly inside the dashboard.
+-  **Modern Dark UI:** Sleek, responsive dashboard built with React, Tailwind CSS, and Lucide icons.
 
 ---
 
@@ -26,7 +26,6 @@
 ```
                                   ┌───────────────────────┐
                                   │  Client Apps / Backend│
-                                  │   (Threads, React...) │
                                   └──────────┬────────────┘
                                              │
                        GET /api/flags/evaluate/:key?company=...
@@ -204,4 +203,3 @@ router.post("/create-post", async (req, res) => {
   // Normal post creation logic...
 });
 ```
-
