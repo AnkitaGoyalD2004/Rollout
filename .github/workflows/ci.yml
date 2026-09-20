@@ -71,13 +71,6 @@ jobs:
     steps:
       - name: Verify All Checks Passed
         run: |
-          echo "✅ All CI checks passed successfully!"
-          echo "🚀 Code is verified and ready for deployment."
+          echo "All CI checks passed successfully!"
+          echo "Code is verified and ready for deployment."
 
-      # Optional Render Deployment (Uncomment when you have a Render Deploy Hook URL)
-      # - name: Trigger Render Deploy Hook
-      #   if: env.RENDER_DEPLOY_HOOK_URL != ''
-      #   env:
-      #     RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-      #   run: |
-      #     curl -X POST "$RENDER_DEPLOY_HOOK_URL"
