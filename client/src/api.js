@@ -11,7 +11,6 @@ function getAuthHeaders() {
   };
 }
 
-// 1. AUTHENTICATION APIS (Dynamic - users type their own company)
 export async function registerUser({ name, email, password, company }) {
   const res = await fetch(`${AUTH_URL}/register`, {
     method: 'POST',
@@ -48,7 +47,6 @@ export async function getMe() {
   return res.json();
 }
 
-// 2. FEATURE FLAGS APIS (Company is securely identified via the JWT token)
 export async function getFlags(env = 'all') {
   const url = env && env !== 'all' ? `${FLAGS_URL}?env=${encodeURIComponent(env)}` : FLAGS_URL;
   const res = await fetch(url, {
@@ -61,7 +59,6 @@ export async function getFlags(env = 'all') {
   return res.json();
 }
 
-// Fetch recent audit logs for authenticated workspace
 export async function getAuditLogs() {
   const res = await fetch(`${FLAGS_URL}/audit-logs`, {
     headers: getAuthHeaders(),
@@ -70,7 +67,7 @@ export async function getAuditLogs() {
   return res.json();
 }
 
-// Create a new flag in authenticated company workspace
+
 export async function createFlag(flagData) {
   const res = await fetch(FLAGS_URL, {
     method: 'POST',
@@ -84,7 +81,6 @@ export async function createFlag(flagData) {
   return res.json();
 }
 
-// Toggle a flag ON or OFF
 export async function toggleFlag(id) {
   const res = await fetch(`${FLAGS_URL}/${id}/toggle`, {
     method: 'PATCH',
@@ -118,7 +114,6 @@ export async function deleteFlag(id) {
   return res.json();
 }
 
-// Test / Evaluate a flag (Public evaluation endpoint)
 export async function evaluateFlag(key, userId, env = 'production', company = '') {
   const params = new URLSearchParams();
   if (userId) params.append('userId', userId);

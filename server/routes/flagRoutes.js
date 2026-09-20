@@ -2,6 +2,7 @@ import express from 'express';
 import authMiddleware from '../middleware/auth.js';
 import AuditLog from '../models/AuditLog.js';
 import Flag from '../models/Flag.js';
+import { getFlagFromCache, invalidateFlagCache, setFlagInCache } from '../redis.js';
 import { evaluateFlag } from '../utils/evaluator.js';
 
 const router = express.Router();
@@ -74,6 +75,9 @@ router.post('/', authMiddleware, async (req, res) => {
       console.error('AuditLog write error:', logErr.message);
     }
 
+    // ⚡ Invalidate Redis Cache
+    await invalidateFlagCache(flag.company, flag.key);
+
     res.status(201).json(flag);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -111,6 +115,9 @@ router.patch('/:id/toggle', authMiddleware, async (req, res) => {
     } catch (logErr) {
       console.error('AuditLog write error:', logErr.message);
     }
+
+    // ⚡ Invalidate Redis Cache
+    await invalidateFlagCache(flag.company, flag.key);
 
     res.json(flag);
   } catch (error) {
@@ -155,6 +162,9 @@ router.put('/:id', authMiddleware, async (req, res) => {
       console.error('AuditLog write error:', logErr.message);
     }
 
+    // ⚡ Invalidate Redis Cache
+    await invalidateFlagCache(flag.company, flag.key);
+
     res.json(flag);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -189,44 +199,65 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       console.error('AuditLog write error:', logErr.message);
     }
 
+    // ⚡ Invalidate Redis Cache
+    await invalidateFlagCache(flag.company, flag.key);
+
     res.json({ message: 'Flag deleted successfully', id: req.params.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// 7. EVALUATE SINGLE FLAG (Called by client apps to check a feature for specific company)
+// 7. EVALUATE SINGLE FLAG (Ultra-fast cached endpoint called by client apps)
 router.get('/evaluate/:key', async (req, res) => {
   try {
     const { key } = req.params;
     const { userId, env, company } = req.query;
 
-    const queryFilter = { key };
-    if (env && env !== 'all') {
-      queryFilter.environment = env;
-    }
-    if (company && company !== 'all') {
-      queryFilter.company = company;
-    }
+    const safeCompany = company && company !== 'all' ? company : 'all';
+    const safeEnv = env && env !== 'all' ? env : 'all';
 
-    const flag = await Flag.findOne(queryFilter);
-    if (!flag) {
-      return res.status(404).json({ 
-        error: `Flag "${key}" not found${company ? ` in company "${company}"` : ''} (env: "${env || 'any'}")`, 
-        enabled: false 
-      });
+    // ⚡ 1. Check Redis Cache First (Sub-millisecond)
+    let flag = await getFlagFromCache(safeCompany, safeEnv, key);
+    let cacheHit = false;
+
+    if (flag) {
+      cacheHit = true;
+    } else {
+      // 🐢 2. Cache Miss: Fall back to MongoDB
+      const queryFilter = { key };
+      if (env && env !== 'all') {
+        queryFilter.environment = env;
+      }
+      if (company && company !== 'all') {
+        queryFilter.company = company;
+      }
+
+      flag = await Flag.findOne(queryFilter);
+      if (!flag) {
+        return res.status(404).json({ 
+          error: `Flag "${key}" not found${company ? ` in company "${company}"` : ''} (env: "${env || 'any'}")`, 
+          enabled: false 
+        });
+      }
+
+      // ⚡ 3. Store in Redis for future requests (5 minutes TTL)
+      await setFlagInCache(safeCompany, safeEnv, key, flag);
     }
 
     const evaluation = evaluateFlag(flag, userId);
 
     // 📈 Asynchronously record evaluation traffic metrics
-    Flag.findByIdAndUpdate(flag._id, {
-      $inc: {
-        evaluationCount: 1,
-        enabledCount: evaluation.enabled ? 1 : 0,
-      },
-    }).catch((err) => console.error('Traffic increment error:', err.message));
+    if (flag._id) {
+      Flag.findByIdAndUpdate(flag._id, {
+        $inc: {
+          evaluationCount: 1,
+          enabledCount: evaluation.enabled ? 1 : 0,
+        },
+      }).catch((err) => console.error('Traffic increment error:', err.message));
+    }
 
+    res.set('X-Cache', cacheHit ? 'HIT' : 'MISS');
     res.json({
       company: flag.company,
       flagKey: key,
@@ -234,6 +265,7 @@ router.get('/evaluate/:key', async (req, res) => {
       userId: userId || null,
       enabled: evaluation.enabled,
       reason: evaluation.reason,
+      cacheHit,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
