@@ -45,7 +45,7 @@
 
 ---
 
-## 🚀 Quick Start Guide
+##  Quick Start Guide
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18.0.0 or higher)
