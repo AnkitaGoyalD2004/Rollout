@@ -2,6 +2,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import mongoose from 'mongoose';
+import serverless from 'serverless-http';
 import authRoutes from './routes/authRoutes.js';
 import flagRoutes from './routes/flagRoutes.js';
 
@@ -22,23 +23,44 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/flags', flagRoutes);
 
-    app.get('/health', (req, res) => {
-      res.json({ status: 'ok', message: 'Rollout Backend is running!' });
-    });
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Rollout Backend is running on AWS Lambda!' });
+});
 
-    const connectDB = async () => {
-      try {
-        const conn = await mongoose.connect(process.env.MONGODB_URI);
-        console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
-      } catch (error) {
-        console.error(`MongoDB Connection Error: ${error.message}`);
-        process.exit(1);
-      }
-    };
+export const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(`MongoDB Connected successfully: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
+    if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      process.exit(1);
+    }
+  }
+};
 
-    // Listen on 0.0.0.0 so both localhost and 127.0.0.1 can connect!
-    connectDB().then(() => {
-      app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server running on http://localhost:${PORT}`);
-      });
+// Start local server if not running inside AWS Lambda
+if (!process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  connectDB().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
     });
+  });
+}
+
+// AWS Lambda handler export (Compatible with default "index.handler")
+let isDbConnected = false;
+export const handler = async (event, context) => {
+  if (context) {
+    context.callbackWaitsForEmptyEventLoop = false;
+  }
+  if (!isDbConnected) {
+    await connectDB();
+    isDbConnected = true;
+  }
+  const serverlessHandler = serverless(app);
+  return serverlessHandler(event, context);
+};
+
+export default app;

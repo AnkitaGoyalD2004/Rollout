@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "build:lambda": "rm -f lambda-deployment.zip && zip -r lambda-deployment.zip index.js lambda.js redis.js models routes middleware utils package.json package-lock.json node_modules -x '*.git*' -x 'node_modules/.cache/*'"
   },
   "type": "module",
   "keywords": [],
@@ -18,7 +19,8 @@
     "express": "^5.2.1",
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.1"
+    "mongoose": "^9.10.1",
+    "serverless-http": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
